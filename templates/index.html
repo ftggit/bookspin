@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BookWheel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+  <body data-shelf-url="{{ shelf_url or '' }}">
+    <header class="app-header">
+      <h1>BookWheel</h1>
+      <p class="tagline">Spin the wheel to pick your next read.</p>
+    </header>
+
+    <main class="layout">
+      <section class="controls">
+        <form id="sync-form" class="card">
+          <h2>Sync Goodreads Shelf</h2>
+          <label for="shelf-url">Shelf URL</label>
+          <div class="input-group">
+            <input id="shelf-url" name="shelf_url" type="url" placeholder="https://www.goodreads.com/review/list/..." required />
+            <button type="submit">Sync</button>
+          </div>
+          <p class="help">Paste the URL to your public Goodreads shelf. We will pull in the books for you.</p>
+        </form>
+
+        <form id="add-form" class="card">
+          <h2>Add Book Manually</h2>
+          <label for="manual-title">Title</label>
+          <input id="manual-title" name="title" type="text" placeholder="Book title" required />
+          <label for="manual-author">Author</label>
+          <input id="manual-author" name="author" type="text" placeholder="Author" />
+          <button type="submit">Add Book</button>
+        </form>
+
+        <section class="card" id="book-list-section">
+          <div class="list-header">
+            <h2>Books On The Wheel</h2>
+            <p id="book-count"></p>
+          </div>
+          <ul id="book-list"></ul>
+        </section>
+      </section>
+
+      <section class="wheel-area card">
+        <canvas id="wheel-canvas" width="500" height="500" role="img" aria-label="Book selection wheel"></canvas>
+        <button id="spin-button" class="spin">Spin The Wheel</button>
+        <p id="selected-book" class="selection" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <template id="book-list-item">
+      <li>
+        <figure class="book-cover">
+          <img alt="Book cover" />
+        </figure>
+        <div class="book-meta">
+          <a class="book-title" target="_blank" rel="noopener"></a>
+          <span class="book-author"></span>
+        </div>
+        <button class="remove">Remove</button>
+      </li>
+    </template>
+
+    <script src="{{ url_for('static', filename='js/wheel.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  </body>
+</html>
