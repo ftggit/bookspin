@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Environments
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# Build / cache
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+
+# OS/Editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# App data
+bookwheel.db

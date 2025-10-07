@@ -3,13 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>BookWheel</title>
+    <title>SpinBook</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
   </head>
   <body data-shelf-url="{{ shelf_url or '' }}">
     <header class="app-header">
-      <h1>BookWheel</h1>
-      <p class="tagline">Spin the wheel to pick your next read.</p>
+      <div class="header-text">
+        <span class="hero-title">SpinBook</span>
+        <p class="tagline">Spin the pages to discover your next read.</p>
+      </div>
     </header>
 
     <main class="layout">
@@ -42,10 +44,36 @@
         </section>
       </section>
 
-      <section class="wheel-area card">
-        <canvas id="wheel-canvas" width="500" height="500" role="img" aria-label="Book selection wheel"></canvas>
-        <button id="spin-button" class="spin">Spin The Wheel</button>
-        <p id="selected-book" class="selection" aria-live="polite"></p>
+      <section class="animation-area card">
+        <div id="book-fan-container" aria-live="polite" aria-label="Book selection animation">
+          <div class="book-fan">
+            <div class="book-shadow"></div>
+            <div class="book-back-cover"></div>
+            <div class="book-pages">
+              <span class="book-page"></span>
+              <span class="book-page"></span>
+              <span class="book-page"></span>
+              <span class="book-page"></span>
+              <span class="book-page"></span>
+              <span class="book-page"></span>
+              <span class="book-page"></span>
+            </div>
+            <div class="book-front-cover"></div>
+          </div>
+        </div>
+        <button id="pick-button" class="pick">Pick A Book</button>
+
+        <article id="selected-book-card" class="selected-card" hidden>
+          <div class="selected-media">
+            <img id="selected-cover" alt="Selected book cover" />
+          </div>
+          <div class="selected-meta">
+            <h3 id="selected-title"></h3>
+            <p id="selected-author"></p>
+            <a id="selected-link" href="#" target="_blank" rel="noopener" hidden>View on Goodreads</a>
+            <button id="remove-selected" class="remove-selected" disabled>Remove from List?</button>
+          </div>
+        </article>
       </section>
     </main>
 
@@ -62,7 +90,6 @@
       </li>
     </template>
 
-    <script src="{{ url_for('static', filename='js/wheel.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
   </body>
 </html>

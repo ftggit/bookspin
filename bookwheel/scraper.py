@@ -92,6 +92,11 @@ def _parse_shelf_html(html: str) -> tuple[list[ScrapedBook], bool]:
     soup = BeautifulSoup(html, "html.parser")
     rows = soup.select("table.tableList tr")
 
+    if not rows:
+        books_table = soup.select_one("table#books")
+        if books_table:
+            rows = books_table.select("tr[id^=review_]")
+
     books: list[ScrapedBook] = []
     for row in rows:
         book = _parse_row(row)

@@ -5,36 +5,42 @@
   const addForm = document.getElementById("add-form");
   const bookList = document.getElementById("book-list");
   const bookTemplate = document.getElementById("book-list-item");
-  const spinButton = document.getElementById("spin-button");
-  const selectedBook = document.getElementById("selected-book");
   const bookCount = document.getElementById("book-count");
-  const wheelCanvas = document.getElementById("wheel-canvas");
 
-  const wheel = new window.BookWheel(wheelCanvas, {
-    onSpinEnd(book) {
-      selectedBook.textContent = book.author
-        ? `${book.title} — ${book.author}`
-        : book.title;
-    },
-  });
+  const pickButton = document.getElementById("pick-button");
+  const fanContainer = document.getElementById("book-fan-container");
+  const pageElements = Array.from(fanContainer.querySelectorAll(".book-page"));
+  const selectedCard = document.getElementById("selected-book-card");
+  const selectedCover = document.getElementById("selected-cover");
+  const selectedTitle = document.getElementById("selected-title");
+  const selectedAuthor = document.getElementById("selected-author");
+  const selectedLink = document.getElementById("selected-link");
+  const removeSelectedButton = document.getElementById("remove-selected");
 
   const initialShelf = document.body.getAttribute("data-shelf-url");
   if (initialShelf) {
     shelfInput.value = initialShelf;
   }
 
+  let books = [];
+  let currentSelection = null;
+  let fanTimeout = null;
+
   async function loadBooks() {
     const response = await fetch("/api/books", { cache: "no-store" });
     if (!response.ok) {
       throw new Error("Failed to load books");
     }
-    const books = await response.json();
-    renderBooks(books);
-    wheel.setBooks(books);
-    selectedBook.textContent = "";
+    books = await response.json();
+    window.clearTimeout(fanTimeout);
+    fanContainer.classList.remove("is-fanning");
+    renderBooks();
+    if (!books.some((book) => currentSelection && book.id === currentSelection.id)) {
+      clearSelectedBook();
+    }
   }
 
-  function renderBooks(books) {
+  function renderBooks() {
     bookList.innerHTML = "";
     bookCount.textContent = books.length ? `${books.length} total` : "";
 
@@ -46,7 +52,7 @@
       const removeButton = item.querySelector(".remove");
 
       if (book.image_url) {
-        cover.src = book.image_url;
+        cover.src = resolveCover(book.image_url, 120);
         cover.alt = `${book.title} cover`;
       } else {
         cover.removeAttribute("src");
@@ -70,8 +76,8 @@
     });
   }
 
-  async function removeBook(id) {
-    if (!window.confirm("Remove this book from the wheel?")) {
+  async function removeBook(id, { skipConfirm = false } = {}) {
+    if (!skipConfirm && !window.confirm("Remove this book from your list?")) {
       return;
     }
 
@@ -80,7 +86,93 @@
       window.alert("Failed to remove book");
       return;
     }
+
+    if (currentSelection && currentSelection.id === id) {
+      clearSelectedBook();
+    }
+
     await loadBooks();
+  }
+
+  function clearSelectedBook() {
+    currentSelection = null;
+    selectedCard.hidden = true;
+    removeSelectedButton.disabled = true;
+    selectedCover.removeAttribute("src");
+    selectedCover.alt = "";
+    selectedLink.hidden = true;
+    fanContainer.classList.remove("is-fanning");
+    pageElements.forEach((page) => {
+      page.style.animationDelay = "";
+    });
+  }
+
+  function resolveCover(url, targetSize) {
+    if (!url) return url;
+    const size = targetSize || 260;
+    let enhanced = url
+      .replace(/_SY\d+_/i, `_SY${size}_`)
+      .replace(/_SX\d+_/i, `_SX${size}_`)
+      .replace(/_SS\d+_/i, `_SS${size}_`);
+    const [base] = enhanced.split("?");
+    return base;
+  }
+
+  function showSelectedBook(book) {
+    currentSelection = book;
+    selectedTitle.textContent = book.title;
+    selectedAuthor.textContent = book.author ? `by ${book.author}` : "Author unknown";
+
+    if (book.image_url) {
+      const highRes = resolveCover(book.image_url, 420);
+      selectedCover.src = highRes;
+      selectedCover.alt = `${book.title} cover`;
+    } else {
+      selectedCover.removeAttribute("src");
+      selectedCover.alt = "Cover unavailable";
+    }
+
+    if (book.goodreads_url) {
+      selectedLink.href = book.goodreads_url;
+      selectedLink.hidden = false;
+    } else {
+      selectedLink.hidden = true;
+    }
+
+    selectedCard.hidden = false;
+    removeSelectedButton.disabled = false;
+  }
+
+  function playBookAnimation() {
+    if (!books.length) {
+      window.alert("Your list is empty. Add or sync some books first.");
+      return;
+    }
+
+    if (fanContainer.classList.contains("is-fanning")) {
+      return;
+    }
+
+    pickButton.disabled = true;
+    removeSelectedButton.disabled = true;
+
+    const selectedBook = books[Math.floor(Math.random() * books.length)];
+    const spinDuration = 1700 + Math.random() * 500;
+
+    pageElements.forEach((page, index) => {
+      page.style.animationDelay = `${index * 0.08}s`;
+    });
+
+    fanContainer.classList.add("is-fanning");
+    window.clearTimeout(fanTimeout);
+    fanTimeout = window.setTimeout(() => {
+      fanContainer.classList.remove("is-fanning");
+      pageElements.forEach((page) => {
+        page.style.animationDelay = "";
+      });
+      showSelectedBook(selectedBook);
+      pickButton.disabled = false;
+    }, spinDuration);
   }
 
   syncForm.addEventListener("submit", async (event) => {
@@ -140,18 +232,15 @@
     }
   });
 
-  spinButton.addEventListener("click", () => {
-    if (!wheel.books || !wheel.books.length) {
-      window.alert("The wheel is empty. Add or sync some books first.");
+  pickButton.addEventListener("click", () => {
+    playBookAnimation();
+  });
+
+  removeSelectedButton.addEventListener("click", () => {
+    if (!currentSelection) {
       return;
     }
-
-    if (wheel.isSpinning()) {
-      return;
-    }
-
-    selectedBook.textContent = "Spinning...";
-    wheel.spin();
+    removeBook(currentSelection.id, { skipConfirm: true });
   });
 
   function toggleSyncState(isSyncing) {

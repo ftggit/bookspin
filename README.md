@@ -1,11 +1,12 @@
 # BookWheel
 
-BookWheel is a Flask application that scrapes a public Goodreads shelf, stores the books in PostgreSQL, and visualises them as a spinning wheel so you can pick your next read. You can also add or remove books manually. The project is production-ready for self-hosting or deployment to Azure App Service.
+BookWheel is a Flask application that scrapes a public Goodreads shelf, stores the books in a database, and visualises them as a spinning wheel so you can pick your next read. You can also add or remove books manually. The project is production-ready for self-hosting or deployment to Azure App Service.
 
 ## Requirements
 
 - Python 3.11+
-- PostgreSQL 13+
+- SQLite (bundled with Python) for local development
+- (Optional) PostgreSQL 13+ if you prefer running against Postgres
 - (Optional) Docker / Azure CLI for deployment
 
 ## Local Development
@@ -23,13 +24,13 @@ BookWheel is a Flask application that scrapes a public Goodreads shelf, stores t
    pip install -r requirements.txt
    ```
 
-3. Create a PostgreSQL database and export a `DATABASE_URL`, e.g.:
+3. (Optional) If you want to use PostgreSQL instead of the default SQLite database, export a `DATABASE_URL`, e.g.:
 
    ```powershell
    $Env:DATABASE_URL="postgresql+psycopg://postgres:postgres@localhost:5432/bookwheel"
    ```
 
-4. Create the tables:
+4. Create the tables (this generates `bookwheel.db` when using SQLite):
 
    ```powershell
    python create_tables.py
@@ -50,8 +51,8 @@ Open http://127.0.0.1:5000 in your browser.
 1. Push the source tree to a Git repo.
 2. Create a Linux App Service with the Python runtime (3.11+).
 3. Configure the following App Settings:
-   - `DATABASE_URL` – connection string to your Azure Database for PostgreSQL.
-   - `SECRET_KEY` – random string for Flask sessions.
+   - `DATABASE_URL` - connection string to your Azure Database for PostgreSQL.
+   - `SECRET_KEY` - random string for Flask sessions.
    - `GOODREADS_MAX_PAGES` / `HTTP_TIMEOUT_SECONDS` (optional overrides).
 4. Set the Startup Command to:
    ```
@@ -76,7 +77,7 @@ Open http://127.0.0.1:5000 in your browser.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `DATABASE_URL` | `postgresql+psycopg://postgres:postgres@localhost:5432/bookwheel` | SQLAlchemy connection string |
+| `DATABASE_URL` | `sqlite:///bookwheel.db` | SQLAlchemy connection string (override for PostgreSQL) |
 | `SECRET_KEY` | `change-me` | Flask session signing key |
 | `GOODREADS_MAX_PAGES` | `10` | Maximum Goodreads pagination pages to fetch |
 | `HTTP_TIMEOUT_SECONDS` | `20` | Timeout for Goodreads HTTP requests |

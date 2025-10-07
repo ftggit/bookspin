@@ -27,7 +27,11 @@ def init_engine(database_url: str | None = None) -> Engine:
         "DATABASE_URL",
         "postgresql+psycopg://postgres:postgres@localhost:5432/bookwheel",
     )
-    _engine = create_engine(resolved_url, future=True, pool_pre_ping=True)
+    engine_kwargs = {"future": True, "pool_pre_ping": True}
+    if resolved_url.startswith("sqlite"):
+        engine_kwargs["connect_args"] = {"check_same_thread": False}
+
+    _engine = create_engine(resolved_url, **engine_kwargs)
     SessionLocal = sessionmaker(
         bind=_engine,
         autoflush=False,
